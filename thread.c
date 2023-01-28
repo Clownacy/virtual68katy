@@ -131,7 +131,7 @@ void Thread_Create(Thread* const thread, void (* const function)(void *user_data
 	ThreadArguments* const thread_arguments = Thread_CreateCommon(function, user_data);
 
 	if (thread_arguments != NULL)
-		pthread_create(thread, NULL, ThreadWrapper, thread_arguments);
+		pthread_create(thread, NULL, Thread_FunctionWrapper, thread_arguments);
 }
 
 void Thread_Destroy(Thread* const thread)
