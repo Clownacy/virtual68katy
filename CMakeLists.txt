@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(virtual68katy)
+project(virtual68katy LANGUAGES C)
 
 add_executable(virtual68katy
 	"main.c"
