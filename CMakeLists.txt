@@ -6,11 +6,11 @@ add_executable(virtual68katy
 	"main.c"
 	"thread.c"
 	"thread.h"
-	"clown68000/m68k.c"
-	"clown68000/m68k.h"
-	"clown68000/m68k/opcode.c"
-	"clown68000/m68k/opcode.h"
 )
+
+add_subdirectory("clown68000")
+
+target_link_libraries(virtual68katy PRIVATE clown68000)
 
 set_target_properties(virtual68katy PROPERTIES
 	C_STANDARD 90
