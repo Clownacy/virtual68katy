@@ -8,7 +8,7 @@ add_executable(virtual68katy
 	"thread.h"
 )
 
-add_subdirectory("clown68000")
+add_subdirectory("clown68000" EXCLUDE_FROM_ALL)
 
 target_link_libraries(virtual68katy PRIVATE clown68000)
 
