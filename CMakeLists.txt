@@ -6,8 +6,6 @@ add_executable(virtual68katy
 	"main.c"
 	"thread.c"
 	"thread.h"
-	"clown68000/error.c"
-	"clown68000/error.h"
 	"clown68000/m68k.c"
 	"clown68000/m68k.h"
 	"clown68000/m68k/opcode.c"

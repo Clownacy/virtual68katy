@@ -20,7 +20,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "clown68000/error.h"
 #include "clown68000/m68k.h"
 
 #include "thread.h"
@@ -205,7 +204,7 @@ static void M68kThread(void* const user_data)
 
 	KatyState* const state = (KatyState*)user_data;
 
-	SetErrorCallback(ErrorCallback);
+	M68k_SetErrorCallback(ErrorCallback);
 
 	callbacks.read_callback = ReadCallback;
 	callbacks.write_callback = WriteCallback;
