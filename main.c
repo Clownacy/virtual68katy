@@ -204,13 +204,14 @@ static void M68kThread(void* const user_data)
 
 	KatyState* const state = (KatyState*)user_data;
 
-	M68k_SetErrorCallback(ErrorCallback);
-
 	callbacks.read_callback = ReadCallback;
 	callbacks.write_callback = WriteCallback;
 	callbacks.user_data = state;
 
+	Mutex_Lock(&mutex);
+	M68k_SetErrorCallback(ErrorCallback);
 	M68k_Reset(&state->m68k, &callbacks);
+	Mutex_Unlock(&mutex);
 
 	for (;;)
 	{
