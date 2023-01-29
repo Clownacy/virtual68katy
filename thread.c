@@ -18,6 +18,7 @@
 
 #include "thread.h"
 
+#include <stddef.h>
 #include <stdlib.h>
 
 typedef struct ThreadArguments
@@ -99,6 +100,7 @@ void Thread_Sleep(const unsigned int milliseconds)
 #elif _POSIX_VERSION >= 200112L
 
 #include <pthread.h>
+#include <unistd.h>
 
 void CreateMutex(Mutex* const mutex)
 {
