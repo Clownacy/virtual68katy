@@ -70,10 +70,10 @@ static cc_u16f ReadCallback(const void* const user_data, const cc_u32f address, 
 	{
 		/* 0x00000 - 0x77FFF : ROM */
 		if (do_high_byte)
-			value |= (state->rom[address + 0] << 8);
+			value |= (state->rom[(address & 0x7FFFF) + 0] << 8);
 
 		if (do_low_byte)
-			value |= (state->rom[address + 1] << 0);
+			value |= (state->rom[(address & 0x7FFFF) + 1] << 0);
 	}
 	else
 	{
