@@ -10,8 +10,9 @@ https://www.bigmessowires.com/68-katy/
 This emulator is written in ANSI C, licensed under the AGPLv3, and relies on
 either WinAPI or POSIX-2001 for threading and terminal manipulation.
 
-The 68 Katy comes in two binary-incompatible variants: breadboard and PCB. This
-emulator implements the PCB version.
+The 68 Katy comes in two binary-incompatible variants: breadboard and PCB.
+Virtual 68 Katy emulates the PCB version by default, but it can be made to
+emulate the breadboard version by passing the `-b` flag.
 
 This emulator runs entirely from the command line, and can be exited by
 pressing the escape key twice. When attempting to boot Linux, the 68 Katy will
