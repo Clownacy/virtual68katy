@@ -143,7 +143,7 @@ void Thread_Destroy(Thread* const thread)
 
 void Thread_Sleep(const unsigned int milliseconds)
 {
-	usleep(1000 * milliseconds);
+	usleep((useconds_t)1000 * milliseconds);
 }
 
 #else
