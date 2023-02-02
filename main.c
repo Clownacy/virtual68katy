@@ -20,13 +20,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "clown68000/m68k.h"
+#include "clown68000/clown68000.h"
 
 #include "thread.h"
 
 typedef struct KatyState
 {
-	M68k_State m68k;
+	Clown68000_State m68k;
 	cc_u8l rom[0x78000];
 	cc_u8l ram[0x80000];
 	char fifo[0x100];
@@ -200,7 +200,7 @@ static void WriteCallback(const void* const user_data, const cc_u32f address, co
 static void M68kThread(void* const user_data)
 {
 	/* This thread runs the 68k emulator. */
-	M68k_ReadWriteCallbacks callbacks;
+	Clown68000_ReadWriteCallbacks callbacks;
 
 	KatyState* const state = (KatyState*)user_data;
 
@@ -209,14 +209,14 @@ static void M68kThread(void* const user_data)
 	callbacks.user_data = state;
 
 	Mutex_Lock(&mutex);
-	M68k_SetErrorCallback(ErrorCallback);
-	M68k_Reset(&state->m68k, &callbacks);
+	Clown68000_SetErrorCallback(ErrorCallback);
+	Clown68000_Reset(&state->m68k, &callbacks);
 	Mutex_Unlock(&mutex);
 
 	for (;;)
 	{
 		Mutex_Lock(&mutex);
-		M68k_DoCycle(&state->m68k, &callbacks);
+		Clown68000_DoCycle(&state->m68k, &callbacks);
 		Mutex_Unlock(&mutex);
 	}
 }
@@ -224,7 +224,7 @@ static void M68kThread(void* const user_data)
 static void TimerThread(void* const user_data)
 {
 	/* This thread exists to interrupt the 68k. */
-	M68k_ReadWriteCallbacks callbacks;
+	Clown68000_ReadWriteCallbacks callbacks;
 
 	KatyState* const state = (KatyState*)user_data;
 
@@ -240,9 +240,9 @@ static void TimerThread(void* const user_data)
 		   but it doesn't appear to work. The 68 Katy's schematic seems to explicitly prevent interrupt 7
 		   from firing anyway. */
 		if (state->fifo_write != state->fifo_read)
-			M68k_Interrupt(&state->m68k, &callbacks, 2);
+			Clown68000_Interrupt(&state->m68k, &callbacks, 2);
 
-		M68k_Interrupt(&state->m68k, &callbacks, 5);
+		Clown68000_Interrupt(&state->m68k, &callbacks, 5);
 
 		Mutex_Unlock(&mutex);
 
