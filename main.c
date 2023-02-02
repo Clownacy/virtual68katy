@@ -32,6 +32,7 @@ typedef struct KatyState
 	char fifo[0x100];
 	cc_u16f fifo_write;
 	cc_u16f fifo_read;
+	cc_bool breadboard_compatibility;
 } KatyState;
 
 static KatyState katy_state;
@@ -77,10 +78,9 @@ static cc_u16f ReadCallback(const void* const user_data, const cc_u32f address, 
 	else
 	{
 		/* 0x78000 - 0x7FFFF : IO */
-		switch ((address / 0x1000) & 7)
+		switch ((address / 0x2000) & 3)
 		{
-			case (0x78000 / 0x1000) & 7:
-			case (0x79000 / 0x1000) & 7:
+			case (0x78000 / 0x2000) & 3:
 				/* 78000 - 79FFF : Serial in */
 				if (do_high_byte)
 				{
@@ -98,30 +98,42 @@ static cc_u16f ReadCallback(const void* const user_data, const cc_u32f address, 
 
 				break;
 
-			case (0x7A000 / 0x1000) & 7:
-			case (0x7B000 / 0x1000) & 7:
+			case (0x7A000 / 0x2000) & 3:
 				/* 7A000 - 7BFFF : Serial out */
 				fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to read from serial out at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
 
 				break;
 
-			case (0x7C000 / 0x1000) & 7:
-				/* 7C000 - 7CFFF : Serial status RDF */
-				if (do_high_byte)
-					value |= (state->fifo_write == state->fifo_read) << 8;
+			case (0x7C000 / 0x2000) & 3:
+			{
+				const cc_bool rdf = state->fifo_write == state->fifo_read;
+				const cc_bool txe = cc_false;
 
-				if (do_low_byte)
-					value |= (state->fifo_write == state->fifo_read) << 0;
+				if (state->breadboard_compatibility)
+				{
+					/* 7C000 - 7DFFF : Serial status RDF & TXE */
+					const cc_u16f rdf_and_txe = (txe << 1) | (rdf << 0);
+
+					value = (rdf_and_txe << 8) | (rdf_and_txe << 0);
+				}
+				else
+				{
+					if ((address & 0x1000) == 0)
+					{
+						/* 7C000 - 7CFFF : Serial status RDF */
+						value = (rdf << 8) | (rdf << 0);
+					}
+					else
+					{
+						/* 7D000 - 7DFFF : Serial status TXE */
+						value = (txe << 8) | (txe << 0);
+					}
+				}
 
 				break;
+			}
 
-			case (0x7D000 / 0x1000) & 7:
-				/* 7D000 - 7DFFF : Serial status TXE */
-				value = 0;
-				break;
-
-			case (0x7E000 / 0x1000) & 7:
-			case (0x7F000 / 0x1000) & 7:
+			case (0x7E000 / 0x2000) & 3:
 				/* 7E000 - 7FFFF : LED register */
 				fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to read from LED register at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
 				break;
@@ -156,16 +168,14 @@ static void WriteCallback(const void* const user_data, const cc_u32f address, co
 	else
 	{
 		/* 0x78000 - 0x7FFFF : IO */
-		switch ((address / 0x1000) & 7)
+		switch ((address / 0x2000) & 3)
 		{
-			case (0x78000 / 0x1000) & 7:
-			case (0x79000 / 0x1000) & 7:
+			case (0x78000 / 0x2000) & 3:
 				/* 78000 - 79FFF : Serial in */
 				fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to write to serial in at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
 				break;
 
-			case (0x7A000 / 0x1000) & 7:
-			case (0x7B000 / 0x1000) & 7:
+			case (0x7A000 / 0x2000) & 3:
 				/* 7A000 - 7BFFF : Serial out */
 				if (do_high_byte)
 					fputc(value >> 8, stdout);
@@ -175,18 +185,29 @@ static void WriteCallback(const void* const user_data, const cc_u32f address, co
 
 				break;
 
-			case (0x7C000 / 0x1000) & 7:
-				/* 7C000 - 7CFFF : Serial status RDF */
-				fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to write to serial status RDF at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
+			case (0x7C000 / 0x2000) & 3:
+				if (state->breadboard_compatibility)
+				{
+					/* 7C000 - 7DFFF : Serial status RDF & TXE */
+					fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to write to serial status RDF/TXE at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
+				}
+				else
+				{
+					if ((address & 0x1000) == 0)
+					{
+						/* 7C000 - 7CFFF : Serial status RDF */
+						fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to write to serial status RDF at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
+					}
+					else
+					{
+						/* 7D000 - 7DFFF : Serial status TXE */
+						fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to write to serial status TXE at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
+					}
+				}
+
 				break;
 
-			case (0x7D000 / 0x1000) & 7:
-				/* 7D000 - 7DFFF : Serial status TXE */
-				fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to write to serial status TXE at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
-				break;
-
-			case (0x7E000 / 0x1000) & 7:
-			case (0x7F000 / 0x1000) & 7:
+			case (0x7E000 / 0x2000) & 3:
 				/* 7E000 - 7FFFF : LED register */
 				break;
 
@@ -298,7 +319,10 @@ int main(const int argc, char** const argv)
 
 	if (argc < 2)
 	{
-		fputs("Must pass path to firmware image as argument.\n", stderr);
+		fputs("Usage: [executable] [path to firmware] [options]\n"
+		      "\n"
+		      "Options:\n"
+		      "  '-b' - Emulate a breadboard 68 Katy instead of a PCB 68 Katy.\n", stderr);
 	}
 	else
 	{
@@ -314,6 +338,8 @@ int main(const int argc, char** const argv)
 
 			fread(katy_state.rom, 1, sizeof(katy_state.rom), file);
 			fclose(file);
+
+			katy_state.breadboard_compatibility = argc > 2 && argv[2][0] == '-' && argv[2][1] == 'b' && argv[2][2] == '\0';
 
 			/* Set-up threads. */
 			Mutex_Create(&mutex);
