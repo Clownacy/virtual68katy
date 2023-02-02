@@ -49,6 +49,10 @@ static void ErrorCallback(const char* const format, const va_list arg)
 	fflush(stderr);
 }
 
+#define CALLBACK_ERROR(ACTION, LOCATION) fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to " ACTION " " LOCATION " at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
+#define READ_CALLBACK_ERROR(LOCATION) CALLBACK_ERROR("read from", LOCATION)
+#define WRITE_CALLBACK_ERROR(LOCATION) CALLBACK_ERROR("write to", LOCATION)
+
 static cc_u16f ReadCallback(const void* const user_data, const cc_u32f address, const cc_bool do_high_byte, const cc_bool do_low_byte)
 {
 	cc_u16f value;
@@ -100,8 +104,7 @@ static cc_u16f ReadCallback(const void* const user_data, const cc_u32f address, 
 
 			case (0x7A000 / 0x2000) & 3:
 				/* 7A000 - 7BFFF : Serial out */
-				fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to read from serial out at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
-
+				READ_CALLBACK_ERROR("serial out");
 				break;
 
 			case (0x7C000 / 0x2000) & 3:
@@ -135,7 +138,7 @@ static cc_u16f ReadCallback(const void* const user_data, const cc_u32f address, 
 
 			case (0x7E000 / 0x2000) & 3:
 				/* 7E000 - 7FFFF : LED register */
-				fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to read from LED register at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
+				READ_CALLBACK_ERROR("LED register");
 				break;
 
 			default:
@@ -163,7 +166,7 @@ static void WriteCallback(const void* const user_data, const cc_u32f address, co
 	else if ((address & 0x78000) != 0x78000)
 	{
 		/* 0x00000 - 0x77FFF : ROM */
-		fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to write to ROM at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
+		WRITE_CALLBACK_ERROR("ROM");
 	}
 	else
 	{
@@ -172,7 +175,7 @@ static void WriteCallback(const void* const user_data, const cc_u32f address, co
 		{
 			case (0x78000 / 0x2000) & 3:
 				/* 78000 - 79FFF : Serial in */
-				fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to write to serial in at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
+				WRITE_CALLBACK_ERROR("serial in");
 				break;
 
 			case (0x7A000 / 0x2000) & 3:
@@ -189,19 +192,19 @@ static void WriteCallback(const void* const user_data, const cc_u32f address, co
 				if (state->breadboard_compatibility)
 				{
 					/* 7C000 - 7DFFF : Serial status RDF & TXE */
-					fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to write to serial status RDF/TXE at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
+					WRITE_CALLBACK_ERROR("serial status RDF/TXE");
 				}
 				else
 				{
 					if ((address & 0x1000) == 0)
 					{
 						/* 7C000 - 7CFFF : Serial status RDF */
-						fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to write to serial status RDF at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
+						WRITE_CALLBACK_ERROR("serial status RDF");
 					}
 					else
 					{
 						/* 7D000 - 7DFFF : Serial status TXE */
-						fprintf(stderr, "[%08" CC_PRIXLEAST32 "] Attempted to write to serial status TXE at address 0x%" CC_PRIXFAST32 "\n", state->m68k.program_counter, address);
+						WRITE_CALLBACK_ERROR("serial status TXE");
 					}
 				}
 
