@@ -97,27 +97,27 @@ void Thread_Sleep(const unsigned int milliseconds)
 	Sleep(milliseconds);
 }
 
-#elif _POSIX_VERSION >= 200112L
+#elif defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L
 
 #include <pthread.h>
 #include <unistd.h>
 
-void CreateMutex(Mutex* const mutex)
+void Mutex_Create(Mutex* const mutex)
 {
 	pthread_mutex_init(mutex, NULL);
 }
 
-void DestroyMutex(Mutex* const mutex)
+void Mutex_Destroy(Mutex* const mutex)
 {
 	pthread_mutex_destroy(mutex);
 }
 
-void LockMutex(Mutex* const mutex)
+void Mutex_Lock(Mutex* const mutex)
 {
 	pthread_mutex_lock(mutex);
 }
 
-void UnlockMutex(Mutex* const mutex)
+void Mutex_Unlock(Mutex* const mutex)
 {
 	pthread_mutex_unlock(mutex);
 }

@@ -20,20 +20,26 @@
 #define THREAD_H
 
 #ifdef _WIN32
-#include <windows.h>
 
-typedef HANDLE Mutex;
-typedef HANDLE Thread;
+ #include <windows.h>
 
-#elif _POSIX_VERSION >= 200112L
-#include <pthread.h>
+ typedef HANDLE Mutex;
+ typedef HANDLE Thread;
 
-typedef pthread_mutex_t Mutex;
-typedef pthread_t Thread;
+#elif defined(__unix__)
+
+ #include <unistd.h>
+
+ #if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L
+  #include <pthread.h>
+
+  typedef pthread_mutex_t Mutex;
+  typedef pthread_t Thread;
+ #endif
 
 #else
 
-#error "Define your platforms's mutex and thread types here!"
+ #error "Define your platforms's mutex and thread types here!"
 
 #endif
 

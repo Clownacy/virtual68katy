@@ -42,7 +42,7 @@ static Mutex mutex;
 
 /* clown68000 callbacks */
 
-static void ErrorCallback(const char* const format, const va_list arg)
+static void ErrorCallback(const char* const format, va_list arg)
 {
 	vfprintf(stderr, format, arg);
 	fputc('\n', stderr);
@@ -278,19 +278,24 @@ static void TimerThread(void* const user_data)
 
 #ifdef _WIN32
  #include <conio.h>
-#elif _POSIX_VERSION >= 200112L
+#elif defined(__unix__)
+ #include <unistd.h>
 
-#include <string.h>
-#include <sys/select.h>
-#include <termios.h>
-#include <unistd.h>
+ #if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L
+  #define POSIX
 
-static struct termios original_terminal_attributes;
+  #include <string.h>
+  #include <sys/select.h>
+  #include <termios.h>
+  #include <unistd.h>
+
+  static struct termios original_terminal_attributes;
 
 static void DisableRawConsoleInput(void)
 {
 	tcsetattr(STDIN_FILENO, TCSANOW, &original_terminal_attributes);
 }
+ #endif
 #endif
 
 int main(const int argc, char** const argv)
@@ -299,7 +304,7 @@ int main(const int argc, char** const argv)
 
 	exit_code = EXIT_FAILURE;
 
-#if _POSIX_VERSION >= 200112L
+#ifdef POSIX
 	/* Disable STDIN's line buffering, allowing inputs to be fed directly to the serial port. */
 	{
 	struct termios new_terminal_attributes;
@@ -354,7 +359,7 @@ int main(const int argc, char** const argv)
 			{
 			#ifdef _WIN32
 				const int character = _getch();
-			#elif _POSIX_VERSION >= 200112L
+			#elif defined(POSIX)
 				const int character = getchar();
 			#else
 				#error "Add your platform's non-line-buffered character-getting here!"
